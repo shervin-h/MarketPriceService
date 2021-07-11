@@ -103,8 +103,8 @@ class FTM_ROUTER(Enum):
     ABI = []
 
 
-# _TOKEN_LIST = json.load(open(os.getenv("TOKENS_LIST_DIR")))
-# _DEX_LIST = json.load(open(os.getenv("ADDRESS_BOOK_DIR")))
+_TOKEN_LIST = json.load(open(os.getenv("TOKENS_LIST_DIR")))
+_DEX_LIST = json.load(open(os.getenv("ADDRESS_BOOK_DIR")))
 
 
 

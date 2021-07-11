@@ -1,5 +1,6 @@
 from Network import Chain
-import Schema
+# from Schema import Token
+from . import Schema
 import rapidjson as json
 from enum import Enum
 import logging
@@ -66,6 +67,7 @@ _LAST_USED_DB = 0
 def RedisClient(_db=None, no_decode=False):
     global _REDIS_CLIENTS
     global REQUEST_COUNT
+    global _LAST_USED_DB
     if no_decode:
         return redis.Redis(os.getenv('REDIS_HOST'), os.getenv(
             'REDIS_PORT'), _db or _LAST_USED_DB)
@@ -256,23 +258,13 @@ def get_obj_by_name(name, chain: Chain, from_file=True, is_token=False):
                     logging.info(token)
                     return token
 
-def get_obj_all_tokens(chain: Chain, from_file=True):
+def get_obj_all_tokens(chain: Chain):
     db = chain.redis_db
-    tkns = {}
-    if from_file:
-        for token in chain.tokens.values():
-            obj = Schema.Token(**token)
-            tkns.append(obj)
-        return tkns
-
-    else:
-        for _token in all_tokens(db):
-            token = Schema.Token(**json.loads(_token))
-            if token.address in BAD_ADDRESS:
-                continue
-            logging.info(token)
-            tkns.append(token)
-            return tkns
+    tkns = []
+    for token in chain.tokens.values():
+        obj = Schema.Token(**token)
+        tkns.append(obj)
+    return tkns
 
 
 def get_obj(key, db, is_token=False, is_pair=False,

@@ -43,7 +43,7 @@ Path -> path:(token0address):(token1address):(index){
 
 from pydantic import BaseModel, Field, validator , PrivateAttr
 from concurrent.futures import ThreadPoolExecutor
-from Price import get_market_price
+from Main import get_market_price
 from typing import Optional, List, Dict
 import SyncRedis as Redis
 from threading import Thread
@@ -119,22 +119,22 @@ class DEX_TYPE(enum.Enum):
     DODOV2 = 8
     DODOV1 = 9
 
-    def create(self, data):
-        from tools.Dex.AMM import (UniSwap, MDEX, Spartan, MoonSwap)
-        from tools.Dex.Curve import (EllipsisFinance, AcryptoS, ValueLiquidity)
-        from tools.Dex.PMM import DODO
-        _ROUTER = {
-            1: UniSwap.UniswapPair,
-            2: MDEX.MDEXPair,
-            3: MoonSwap.MoonSwapPair,
-            4: Spartan.SpartanPair,
-            5: EllipsisFinance.EllipsisPair,
-            6: ValueLiquidity.ValueLiquidityVPeg,
-            7: EllipsisFinance.EllipsisPair,
-            8: DODO.DODOPairV2,
-            9: DODO.DODOPairV1,
-        }
-        return _ROUTER[self.value](**data, save=False)
+    # def create(self, data):
+    #     from tools.Dex.AMM import (UniSwap, MDEX, Spartan, MoonSwap)
+    #     from tools.Dex.Curve import (EllipsisFinance, AcryptoS, ValueLiquidity)
+    #     from tools.Dex.PMM import DODO
+    #     _ROUTER = {
+    #         1: UniSwap.UniswapPair,
+    #         2: MDEX.MDEXPair,
+    #         3: MoonSwap.MoonSwapPair,
+    #         4: Spartan.SpartanPair,
+    #         5: EllipsisFinance.EllipsisPair,
+    #         6: ValueLiquidity.ValueLiquidityVPeg,
+    #         7: EllipsisFinance.EllipsisPair,
+    #         8: DODO.DODOPairV2,
+    #         9: DODO.DODOPairV1,
+    #     }
+    #     return _ROUTER[self.value](**data, save=False)
 
 # class ChainType(Chain):
 #     def __init__(self,name:int):
@@ -165,7 +165,11 @@ class FasterBaseModel(BaseModel):
         env_file = ".env"
         arbitrary_types_allowed = True
 
-
+class ValueList:
+    binance : Optional[float]
+    cionmarketcap : Optional[float]
+    pmmdex : Optional[float]
+    
 class Token(FasterBaseModel):
     '''
     TODO
@@ -183,6 +187,7 @@ class Token(FasterBaseModel):
     pairs: dict = {}
     value: float = 0
     value_timestamp: float = 0
+    value_list: ValueList
 
     _SHOW_PRCISION = 10_000 
     _INTIAL_PAIR_VALUE = 1
