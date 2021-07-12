@@ -4,8 +4,7 @@ from Network import Chain
 from coinmarketcapapi import CoinMarketCapAPI, CoinMarketCapAPIError
 from datetime import datetime
 from decimal import Decimal
-# from .tools import Schema 
-from .tools import SyncRedis as Redis
+from tools import SyncRedis as Redis
 import requests
 import logging
 import json
@@ -29,7 +28,7 @@ NETWORK_VALUE_SYMBOL = 'FTM'
 NETWORK_VALUE_WRAPPED_SYMBOL = 'WFTM'
 global _CACHE_
 _CACHE_ = {}
-_CACHE_TIMEOUT = 100 # seconds
+_CACHE_TIMEOUT = 100000000000 # seconds
 
 def _cache(what , func , *args, **kwargs):
     global _CACHE_
@@ -51,53 +50,53 @@ def getMPBinance(_tkns):
             for item in _response.json():
                 _allpairs.append(item["symbol"])
             for token in _tkns:
-                token.value_list.binance = 0
+                token.value_list["binance"] = 0
                 for item in _response.json():
                     if(item["symbol"] == token.symbol + REFRENCE_CURRENCY):
-                        token.value_list.binance = item["price"] * USDT_PRICE
+                        token.value_list["binance"] = item["price"] * USDT_PRICE
                         break
                     elif(item["symbol"] == REFRENCE_CURRENCY + token.symbol):
                         try:
-                            token.value_list.binance = (1/item["price"]) * USDT_PRICE
+                            token.value_list["binance"] = (1/item["price"]) * USDT_PRICE
                             break
                         except:
                             pass
-                if(token.value_list.binance == 0):
-                    for str in _allpairs:
-                        if((token.symbol in str) & (token.value_list.binance == 0)):
-                            _midPrice = 0
-                            _mid2Price = 0
-                            if(str.index(token.symbol) == 0):
-                                _tempSymbol = str[len(token.symbol):]
-                                for item in _response.json():
-                                    if(item["symbol"] == token.symbol + _tempSymbol):
-                                        _midPrice = float(item["price"])
-                                        break
-                                for item in _response.json():
-                                    if(item["symbol"] == _tempSymbol + REFRENCE_CURRENCY):
-                                        _mid2Price = float(item["price"])
-                                        break
-                                    elif(item["symbol"] == REFRENCE_CURRENCY + _tempSymbol):
-                                        _mid2Price = 1/float(item["price"])
-                                        break
-                                token.value_list.binance = _midPrice * _mid2Price * USDT_PRICE
+                    if(token.value_list["binance"] == 0):
+                        for str in _allpairs:
+                            if((token.symbol in str) & (token.value_list["binance"] == 0)):
+                                _midPrice = 0
+                                _mid2Price = 0
+                                if(str.index(token.symbol) == 0):
+                                    _tempSymbol = str[len(token.symbol):]
+                                    for item in _response.json():
+                                        if(item["symbol"] == token.symbol + _tempSymbol):
+                                            _midPrice = float(item["price"])
+                                            break
+                                    for item in _response.json():
+                                        if(item["symbol"] == _tempSymbol + REFRENCE_CURRENCY):
+                                            _mid2Price = float(item["price"])
+                                            break
+                                        elif(item["symbol"] == REFRENCE_CURRENCY + _tempSymbol):
+                                            _mid2Price = 1/float(item["price"])
+                                            break
+                                    token.value_list["binance"] = _midPrice * _mid2Price * USDT_PRICE
 
-                            else:
-                                _tempSymbol = str[:len(token.symbol)]
-                                for item in _response.json():
-                                    if(item["symbol"] == _tempSymbol + token.symbol):
-                                        _midPrice = 1/float(item["price"])
-                                        break
-                                for item in _response.json():
-                                    if(item["symbol"] == _tempSymbol + REFRENCE_CURRENCY):
-                                        _mid2Price = float(item["price"])
-                                        break
-                                    elif(item["symbol"] == REFRENCE_CURRENCY + _tempSymbol):
-                                        _mid2Price = 1/float(item["price"])
-                                        break
-                                token.value_list.binance = _midPrice * _mid2Price * USDT_PRICE
-            if(token.value_list.binance):
-                token.save()
+                                else:
+                                    _tempSymbol = str[:len(token.symbol)]
+                                    for item in _response.json():
+                                        if(item["symbol"] == _tempSymbol + token.symbol):
+                                            _midPrice = 1/float(item["price"])
+                                            break
+                                    for item in _response.json():
+                                        if(item["symbol"] == _tempSymbol + REFRENCE_CURRENCY):
+                                            _mid2Price = float(item["price"])
+                                            break
+                                        elif(item["symbol"] == REFRENCE_CURRENCY + _tempSymbol):
+                                            _mid2Price = 1/float(item["price"])
+                                            break
+                                    token.value_list["binance"] = _midPrice * _mid2Price * USDT_PRICE
+                if(token.value_list["binance"]):
+                    token.save()
         else:
             logging.info("BinanceApi data fetch error!")
     except Exception as e:
@@ -113,8 +112,8 @@ def getMPCoinmarketCap(_tkns):
         for tkn in _tkns:
             for token in tokenInfoList.data:
                 if(token["symbol"] == tkn.symbol):
-                    tkn.value_list.cionmarketcap = float(token["quote"]["USD"]["price"] * PRICE_PERCISION)
-                    if(tkn.value_list.cionmarketcap):
+                    tkn.value_list["cionmarketcap"] = float(token["quote"]["USD"]["price"] * PRICE_PERCISION)
+                    if(tkn.value_list["cionmarketcap"]):
                         tkn.save()
     except Exception as e:
         logging.exception(e)
@@ -122,8 +121,12 @@ def getMPCoinmarketCap(_tkns):
 
 def getMPOnline(token):
     res = []
-    MPB = token.value_list.binance
-    MPC = token.value_list.cionmarketcap
+    MPB = 0
+    MPC = 0
+    if token.value_list["binance"]:
+        MPB = token.value_list["binance"]
+    if token.value_list["cionmarketcap"]:
+        MPC = token.value_list["cionmarketcap"]
     if MPC:
         res.append(MPC)
     if MPB:
@@ -156,7 +159,7 @@ def getMPAMMDexes(tokens,chain, base=PREFERED_BASES_ADDRESS, usd_addresses=USD_A
                             _token] * getMPOnline(Redis.get_obj(_token ,tkn.chain.redis_db, is_token=True))
                         my_prices.append(_p)
         if my_prices:
-            tkn.value_list.pmmdex = sum(my_prices) / len(my_prices)
+            tkn.value_list["pmmdex"] = sum(my_prices) / len(my_prices)
             tkn.save()
     else:
         logging.error(f"Can't Fetch on chain price of token {tkn}  X_X")
@@ -187,10 +190,13 @@ def market_price(token):
 
 def update_market_price():
     for chain in Chain.chains():
+        ti = time.time()
         all_token_objs = Redis.get_obj_all_tokens(chain)
         getMPBinance(all_token_objs)
         getMPCoinmarketCap(all_token_objs)
         getMPAMMDexes(all_token_objs, chain, PREFERED_BASES_ADDRESS, USD_ADDRESSES)
+        ti -= time.time()
+        print(ti)
 while True:            
     update_market_price()
     time.sleep(UPDATE_INTERVAL)

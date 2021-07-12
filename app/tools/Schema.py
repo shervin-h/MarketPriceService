@@ -43,9 +43,9 @@ Path -> path:(token0address):(token1address):(index){
 
 from pydantic import BaseModel, Field, validator , PrivateAttr
 from concurrent.futures import ThreadPoolExecutor
-from Main import get_market_price
+# from .. Main import get_market_price
 from typing import Optional, List, Dict
-import SyncRedis as Redis
+from tools import SyncRedis as Redis
 from threading import Thread
 from Network import Chain
 from hashlib import md5
@@ -165,7 +165,7 @@ class FasterBaseModel(BaseModel):
         env_file = ".env"
         arbitrary_types_allowed = True
 
-class ValueList:
+class ValueList(BaseModel):
     binance : Optional[float]
     cionmarketcap : Optional[float]
     pmmdex : Optional[float]
@@ -187,7 +187,7 @@ class Token(FasterBaseModel):
     pairs: dict = {}
     value: float = 0
     value_timestamp: float = 0
-    value_list: ValueList
+    value_list: dict = {}
 
     _SHOW_PRCISION = 10_000 
     _INTIAL_PAIR_VALUE = 1
@@ -203,14 +203,14 @@ class Token(FasterBaseModel):
     def deadline(self):
         return self.value_timestamp + self._VALUE_TIMEOUT
 
-    def sync(self, non_blocking=False):
-        if os.getenv('OFFLINE_MODE'):
-            return
-        if non_blocking:
-            Thread(target=get_market_price, args=self)
-        self = get_market_price(self)
-        self.save()
-        return self
+    # def sync(self, non_blocking=False):
+    #     if os.getenv('OFFLINE_MODE'):
+    #         return
+    #     if non_blocking:
+    #         Thread(target=get_market_price, args=self)
+    #     self = get_market_price(self)
+    #     self.save()
+    #     return self
 
     def _is_network_value(self):
         return self.address == self.chain.value_token_address

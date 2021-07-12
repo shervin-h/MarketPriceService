@@ -1,6 +1,5 @@
 from Network import Chain
-# from Schema import Token
-from . import Schema
+from tools import Schema
 import rapidjson as json
 from enum import Enum
 import logging
@@ -258,13 +257,7 @@ def get_obj_by_name(name, chain: Chain, from_file=True, is_token=False):
                     logging.info(token)
                     return token
 
-def get_obj_all_tokens(chain: Chain):
-    db = chain.redis_db
-    tkns = []
-    for token in chain.tokens.values():
-        obj = Schema.Token(**token)
-        tkns.append(obj)
-    return tkns
+
 
 
 def get_obj(key, db, is_token=False, is_pair=False,
@@ -298,7 +291,7 @@ def get_obj(key, db, is_token=False, is_pair=False,
 
         _detail = json.loads(cl.get(_k) or "{}")
         if _detail:
-            return Schema.DEX_TYPE(_detail['type']).create(_detail)
+            return Schema.Pair(**_detail)
     if is_path:
         _detail = json.loads(cl.get(_k) or "{}")
         if _detail:
@@ -306,6 +299,12 @@ def get_obj(key, db, is_token=False, is_pair=False,
             return Schema.Path(**_detail, save=False)
     return None
 
+def get_obj_all_tokens(chain: Chain):
+    tkns = []
+    for token in chain.tokens.values():
+        obj = get_obj(token["address"], is_token=True, db = chain.redis_db)
+        tkns.append(obj)
+    return tkns
 
 def update(self, db, cl=None):
 
