@@ -291,6 +291,8 @@ def get_obj(key, db, is_token=False, is_pair=False,
 
         _detail = json.loads(cl.get(_k) or "{}")
         if _detail:
+            if Schema.DEX_TYPE(_detail['type']).name == "VALUE_LIQUIDITY_POOL":
+                print("!!!!!!!!!")
             return Schema.DEX_TYPE(_detail['type']).create(_detail)
     if is_path:
         _detail = json.loads(cl.get(_k) or "{}")

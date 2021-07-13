@@ -147,16 +147,13 @@ class FasterBaseModel(BaseModel):
     chain : Chain = None
     
     def __init__(self, chainId =None,save=True, **data):
-        try:
-            super().__init__(**data)
-            if chainId : 
-                self.chain = Chain(chainId)
-            else:
-                self.chain = Chain(self.chain)
-            if save:
-                self.save()
-        except Exception as e:
-            logging.error(e)
+        super().__init__(**data)
+        if chainId : 
+            self.chain = Chain(chainId)
+        else:
+            self.chain = Chain(self.chain)
+        if save:
+            self.save()
             
     # @property
     # def _db(self):
