@@ -291,7 +291,7 @@ def get_obj(key, db, is_token=False, is_pair=False,
 
         _detail = json.loads(cl.get(_k) or "{}")
         if _detail:
-            return Schema.Pair(**_detail)
+            return Schema.DEX_TYPE(_detail['type']).create(_detail)
     if is_path:
         _detail = json.loads(cl.get(_k) or "{}")
         if _detail:

@@ -15,17 +15,34 @@ BINANCE_URL = "http://api.binance.com/api/v3/ticker/price"
 REFRENCE_CURRENCY = "USDT"
 USDT_PRICE = 1
 PRICE_PERCISION = 1
-USD_PRICE = 1
 CMC_API_KEY = "6122b1c4-1873-47b4-9ef6-d407ad672d6d"
-PREFERED_BASES_ADDRESS = [
-    "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83" , ## WFTM
-]
-USD_ADDRESSES = [
-    "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E",  # DAI
-    "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75",  # USDC
-]
-NETWORK_VALUE_SYMBOL = 'FTM'
-NETWORK_VALUE_WRAPPED_SYMBOL = 'WFTM'
+PREFERED_BASES_ADDRESS = {
+    "FANTOM" : 
+    {
+        "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83" , # WFTM
+        "0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E" , # DAI
+        "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75" , # USDC
+        "0x049d68029688eAbF473097a2fC38ef61633A3C7A" , # FUSDT
+    },
+    "BINANCE":
+    {
+        "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c" , # WBNB
+        "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d" , # USDC
+        "0x55d398326f99059fF775485246999027B3197955" , # USDT
+        "0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3" , # DAI
+
+    },
+    "ETHERUM":
+    {
+        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" , # WETH
+        "0xdAC17F958D2ee523a2206206994597C13D831ec7" , # USDT
+        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" , # USDC
+        "0x6B175474E89094C44Da98b954EedeAC495271d0F" , # DAI
+    }
+}
+
+NETWORK_VALUE_SYMBOL = {'FANTOM':'FTM','ETHEREUM':'ETH','BINANCE':'BNB'}
+NETWORK_VALUE_WRAPPED_SYMBOL = {'FANTOM':'WFTM','ETHEREUM':'WETH','BINANCE':'WBNB'}
 global _CACHE_
 _CACHE_ = {}
 _CACHE_TIMEOUT = 100000000000 # seconds
@@ -51,51 +68,30 @@ def getMPBinance(_tkns):
                 _allpairs.append(item["symbol"])
             for token in _tkns:
                 token.value_list["binance"] = 0
-                for item in _response.json():
-                    if(item["symbol"] == token.symbol + REFRENCE_CURRENCY):
-                        token.value_list["binance"] = item["price"] * USDT_PRICE
-                        break
-                    elif(item["symbol"] == REFRENCE_CURRENCY + token.symbol):
-                        try:
-                            token.value_list["binance"] = (1/item["price"]) * USDT_PRICE
+                if token.symbol == NETWORK_VALUE_WRAPPED_SYMBOL[token.chain.name]:
+                    for item in _response.json():
+                        if(item["symbol"] == token.chain.value_token_symbol + REFRENCE_CURRENCY):
+                            token.value_list["binance"] = item["price"] * USDT_PRICE
                             break
-                        except:
-                            pass
-                    # if(token.value_list["binance"] == 0):
-                    #     for str in _allpairs:
-                    #         if((token.symbol in str) & (token.value_list["binance"] == 0)):
-                    #             _midPrice = 0
-                    #             _mid2Price = 0
-                    #             if(str.index(token.symbol) == 0):
-                    #                 _tempSymbol = str[len(token.symbol):]
-                    #                 for item in _response.json():
-                    #                     if(item["symbol"] == token.symbol + _tempSymbol):
-                    #                         _midPrice = float(item["price"])
-                    #                         break
-                    #                 for item in _response.json():
-                    #                     if(item["symbol"] == _tempSymbol + REFRENCE_CURRENCY):
-                    #                         _mid2Price = float(item["price"])
-                    #                         break
-                    #                     elif(item["symbol"] == REFRENCE_CURRENCY + _tempSymbol):
-                    #                         _mid2Price = 1/float(item["price"])
-                    #                         break
-                    #                 token.value_list["binance"] = _midPrice * _mid2Price * USDT_PRICE
-
-                    #             else:
-                    #                 _tempSymbol = str[:len(token.symbol)]
-                    #                 for item in _response.json():
-                    #                     if(item["symbol"] == _tempSymbol + token.symbol):
-                    #                         _midPrice = 1/float(item["price"])
-                    #                         break
-                    #                 for item in _response.json():
-                    #                     if(item["symbol"] == _tempSymbol + REFRENCE_CURRENCY):
-                    #                         _mid2Price = float(item["price"])
-                    #                         break
-                    #                     elif(item["symbol"] == REFRENCE_CURRENCY + _tempSymbol):
-                    #                         _mid2Price = 1/float(item["price"])
-                    #                         break
-                    #                 token.value_list["binance"] = _midPrice * _mid2Price * USDT_PRICE
+                        elif(item["symbol"] == REFRENCE_CURRENCY + token.chain.value_token_symbol):
+                            try:
+                                token.value_list["binance"] = (1/item["price"]) * USDT_PRICE
+                                break
+                            except:
+                                pass
+                else:
+                    for item in _response.json():
+                        if(item["symbol"] == token.symbol + REFRENCE_CURRENCY):
+                            token.value_list["binance"] = item["price"] * USDT_PRICE
+                            break
+                        elif(item["symbol"] == REFRENCE_CURRENCY + token.symbol):
+                            try:
+                                token.value_list["binance"] = (1/item["price"]) * USDT_PRICE
+                                break
+                            except:
+                                pass
                 if(token.value_list["binance"]):
+                    token.value_list["binance"] = float(token.value_list["binance"])
                     token.save()
         else:
             logging.info("BinanceApi data fetch error!")
@@ -110,35 +106,66 @@ def getMPCoinmarketCap(_tkns):
         # r = cmc.tools_priceconversion()
         tokenInfoList = _cache("CMC" , cmc.cryptocurrency_listings_latest )
         for tkn in _tkns:
-            for token in tokenInfoList.data:
-                if(token["symbol"] == tkn.symbol):
-                    tkn.value_list["cionmarketcap"] = float(token["quote"]["USD"]["price"] * PRICE_PERCISION)
-                    if(tkn.value_list["cionmarketcap"]):
-                        tkn.save()
+            if tkn.symbol == NETWORK_VALUE_WRAPPED_SYMBOL[tkn.chain.name]:
+                for token in tokenInfoList.data:
+                    if(token["symbol"] == tkn.chain.value_token_symbol):
+                        tkn.value_list["cionmarketcap"] = float(token["quote"]["USD"]["price"] * PRICE_PERCISION)
+                        if(tkn.value_list["cionmarketcap"]):
+                            tkn.value_list["cionmarketcap"] = float(tkn.value_list["cionmarketcap"])
+                            tkn.save()
+                            break
+            else:
+                for token in tokenInfoList.data:
+                    if(token["symbol"] == tkn.symbol):
+                        tkn.value_list["cionmarketcap"] = float(token["quote"]["USD"]["price"] * PRICE_PERCISION)
+                        if(tkn.value_list["cionmarketcap"]):
+                            tkn.value_list["cionmarketcap"] = float(tkn.value_list["cionmarketcap"])
+                            tkn.save()
+                            break
     except Exception as e:
         logging.exception(e)
         return 0
 
    
     
-def getMPAMMDexes(tokens,chain, base=PREFERED_BASES_ADDRESS, usd_addresses=USD_ADDRESSES):
+def getMPAMMDexes(tokens,chain):
     for tkn in tokens:
-        my_prices = []
-        for _pair in tkn.pairs:
-            pair = Redis.get_obj(_pair,tkn.chain.redis_db, is_pair=True)
-            for _token in pair.tokens:
-                if _token == tkn.address:
-                    continue
-                if _token in base:
-                    for redisdb in Chain.chains():
-                        _p = pair.token_price(tkn)[_token] * (Redis.get_obj(_token ,redisdb, is_token=True).average_price)
+        if tkn.symbol == NETWORK_VALUE_SYMBOL[tkn.chain.name]:
+            for z in tokens:
+                if z.symbol == NETWORK_VALUE_WRAPPED_SYMBOL[tkn.chain.name]:
+                    wrapped=z
+                    break
+            my_prices = []
+            for _pair in wrapped.pairs:
+                pair = Redis.get_obj(_pair,wrapped.chain.redis_db, is_pair=True)
+                for _token in pair.tokens:
+                    pass
+                    if _token == wrapped.address:
+                        continue
+                    if _token in PREFERED_BASES_ADDRESS[tkn.chain.name]:
+                        _p = pair.token_price(wrapped)[_token] * (Redis.get_obj(_token , chain.redis_db, is_token=True).average_price)
                         my_prices.append(_p)
-        if my_prices:
-            tkn.value_list["pmmdex"] = sum(my_prices) / len(my_prices)
-            tkn.save()
-    else:
-        logging.error(f"Can't Fetch on chain price of token {tkn}  X_X")
-        return 0 
+            if my_prices:
+                tkn.value_list["pmmdex"] = float(sum(my_prices) / len(my_prices))
+                tkn.save()
+            else:
+                logging.info(f"Can't Fetch on chain price of token {tkn}  X_X")
+        else:
+            my_prices = []
+            for _pair in tkn.pairs:
+                pair = Redis.get_obj(_pair,tkn.chain.redis_db, is_pair=True)
+                for _token in pair.tokens:
+                    pass
+                    if _token == tkn.address:
+                        continue
+                    if _token in PREFERED_BASES_ADDRESS[tkn.chain.name]:
+                        _p = pair.token_price(tkn)[_token] * (Redis.get_obj(_token , chain.redis_db, is_token=True).average_price)
+                        my_prices.append(_p)
+            if my_prices:
+                tkn.value_list["pmmdex"] = float(sum(my_prices) / len(my_prices))
+                tkn.save()
+            else:
+                logging.info(f"Can't Fetch on chain price of token {tkn}  X_X")
     
         
 def market_price(token):
@@ -168,7 +195,7 @@ def update_market_price():
         all_token_objs = Redis.get_obj_all_tokens(chain)
         getMPCoinmarketCap(all_token_objs)
         getMPBinance(all_token_objs)
-        getMPAMMDexes(all_token_objs, chain, PREFERED_BASES_ADDRESS, USD_ADDRESSES)
+        getMPAMMDexes(all_token_objs, chain)
         print(chain.name)
 while True:            
     update_market_price()

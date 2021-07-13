@@ -46,6 +46,7 @@ from concurrent.futures import ThreadPoolExecutor
 # from .. Main import get_market_price
 from typing import Optional, List, Dict
 from tools import SyncRedis as Redis
+import tools.Dex
 from threading import Thread
 from Network import Chain
 from hashlib import md5
@@ -121,22 +122,22 @@ class DEX_TYPE(enum.Enum):
     DODOV2 = 8
     DODOV1 = 9
 
-    # def create(self, data):
-    #     from tools.Dex.AMM import (UniSwap, MDEX, Spartan, MoonSwap)
-    #     from tools.Dex.Curve import (EllipsisFinance, AcryptoS, ValueLiquidity)
-    #     from tools.Dex.PMM import DODO
-    #     _ROUTER = {
-    #         1: UniSwap.UniswapPair,
-    #         2: MDEX.MDEXPair,
-    #         3: MoonSwap.MoonSwapPair,
-    #         4: Spartan.SpartanPair,
-    #         5: EllipsisFinance.EllipsisPair,
-    #         6: ValueLiquidity.ValueLiquidityVPeg,
-    #         7: EllipsisFinance.EllipsisPair,
-    #         8: DODO.DODOPairV2,
-    #         9: DODO.DODOPairV1,
-    #     }
-    #     return _ROUTER[self.value](**data, save=False)
+    def create(self, data):
+        from tools.Dex.AMM import (UniSwap, MDEX, Spartan, MoonSwap)
+        from tools.Dex.Curve import (EllipsisFinance, AcryptoS, ValueLiquidity)
+        from tools.Dex.PMM import DODO
+        _ROUTER = {
+            1: UniSwap.UniswapPair,
+            2: MDEX.MDEXPair,
+            3: MoonSwap.MoonSwapPair,
+            4: Spartan.SpartanPair,
+            5: EllipsisFinance.EllipsisPair,
+            6: ValueLiquidity.ValueLiquidityVPeg,
+            7: EllipsisFinance.EllipsisPair,
+            8: DODO.DODOPairV2,
+            9: DODO.DODOPairV1,
+        }
+        return _ROUTER[self.value](**data, save=False)
 
 # class ChainType(Chain):
 #     def __init__(self,name:int):
@@ -416,7 +417,10 @@ class Pair(FasterBaseModel):
             self.tokens[from_index],db = self.chain.redis_db, is_token=True).decimal
         _to_decimal = Redis.get_obj(
             self.tokens[to_index],db = self.chain.redis_db, is_token=True).decimal
-        return (self.reserves[from_index] * 10 ** _to_decimal) / (self.reserves[to_index] * 10 ** _from_decimal)
+        if self.reserves[to_index]:
+            return (self.reserves[from_index] * 10 ** _to_decimal) / (self.reserves[to_index] * 10 ** _from_decimal)
+        else:
+            return 0
 
     def undelete(self):
         try:
