@@ -119,26 +119,7 @@ def getMPCoinmarketCap(_tkns):
         logging.exception(e)
         return 0
 
-def getMPOnline(token):
-    res = []
-    MPB = 0
-    MPC = 0
-    if token.value_list.get("binance"):
-        MPB = token.value_list["binance"]
-    if token.value_list.get("cionmarketcap"):
-        MPC = token.value_list["cionmarketcap"]
-    if MPC:
-        res.append(MPC)
-    if MPB:
-        res.append(MPB)
-    if res:
-        return sum(res) / len(res)
-    if not res and token.symbol == 'WETH':
-        return getMPOnline('ETH') 
-    if not res and token.symbol == 'WBNB':
-        return getMPOnline('BNB') 
-    if not res and token.symbol == 'WFTM':
-        return getMPOnline('FTM')     
+   
     
 def getMPAMMDexes(tokens,chain, base=PREFERED_BASES_ADDRESS, usd_addresses=USD_ADDRESSES):
     for tkn in tokens:
@@ -148,16 +129,10 @@ def getMPAMMDexes(tokens,chain, base=PREFERED_BASES_ADDRESS, usd_addresses=USD_A
             for _token in pair.tokens:
                 if _token == tkn.address:
                     continue
-                if _token in usd_addresses:
-                    my_prices.append(pair.token_price(tkn)[_token] * USD_PRICE)
-                # if _token in base:
-                #     if chain.wrapped_token == _token:
-                #         _p = pair.token_price(tkn)[_token] * getMPOnline(Redis.get_obj(_token ,tkn.chain.redis_db, is_token=True))
-                #         my_prices.append(_p)
-                #     else:
-                #         _p = pair.token_price(tkn)[
-                #             _token] * getMPOnline(Redis.get_obj(_token ,tkn.chain.redis_db, is_token=True))
-                #         my_prices.append(_p)
+                if _token in base:
+                    for redisdb in Chain.chains():
+                        _p = pair.token_price(tkn)[_token] * (Redis.get_obj(_token ,redisdb, is_token=True).average_price)
+                        my_prices.append(_p)
         if my_prices:
             tkn.value_list["pmmdex"] = sum(my_prices) / len(my_prices)
             tkn.save()
@@ -191,8 +166,8 @@ def market_price(token):
 def update_market_price():
     for chain in Chain.chains():
         all_token_objs = Redis.get_obj_all_tokens(chain)
-        getMPBinance(all_token_objs)
         getMPCoinmarketCap(all_token_objs)
+        getMPBinance(all_token_objs)
         getMPAMMDexes(all_token_objs, chain, PREFERED_BASES_ADDRESS, USD_ADDRESSES)
         print(chain.name)
 while True:            

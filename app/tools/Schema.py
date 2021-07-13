@@ -60,6 +60,8 @@ import os
 import re
 
 
+
+
 DEXES = {
 }
 try:
@@ -192,6 +194,13 @@ class Token(FasterBaseModel):
     _SHOW_PRCISION = 10_000 
     _INTIAL_PAIR_VALUE = 1
     _VALUE_TIMEOUT = 10 * 60 # ! 10 minutes
+
+    @ property
+    def average_price(self):
+        if(self.value_list.values()):
+            return sum(self.value_list.values())/len(self.value_list.values())
+        
+
     @ property
     def price(self):
         '''
