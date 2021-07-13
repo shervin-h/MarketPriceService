@@ -140,8 +140,11 @@ class UniswapPair(Schema.Pair):
             self.tokens[from_index],db = self.chain.redis_db, is_token=True).decimal
         _to_decimal = Redis.get_obj(
             self.tokens[to_index],db = self.chain.redis_db, is_token=True).decimal
-        res =  (self.reserves[to_index] * 10 ** _from_decimal)/ (self.reserves[from_index] * 10 ** _to_decimal)
-        return res
+        if self.reserves[from_index]:
+            res =  (self.reserves[to_index] * 10 ** _from_decimal)/ (self.reserves[from_index] * 10 ** _to_decimal)
+            return res
+        else:
+            return 0
 
     def token_price(self, token) -> dict:
         '''
