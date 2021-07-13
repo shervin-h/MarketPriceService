@@ -19,7 +19,7 @@ class ValueLiquidityVPeg(Schema.Pair):
     x_1**2 + b*x_1 = c
     x_1 = (x_1**2 + c) / (2*x_1 + b)
     '''
-    A : int
+    A : int = 200
     N_COINS : int = 3
     rates : List[int] = [10**18] * 3
     _PRECISION =  10 ** 18
