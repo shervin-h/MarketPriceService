@@ -50,12 +50,13 @@ _CACHE_TIMEOUT = 100000000000 # seconds
 def _cache(what , func , *args, **kwargs):
     global _CACHE_
     
-    if _CACHE_.get(what) :
-        if datetime.now().timestamp() - _CACHE_.get(what).get("_CACHE_TIMEOUT") < _CACHE_TIMEOUT:
-            return _CACHE_[what]['response'] 
-    # _cache[what] = requests.get(url=BINANCE_URL)
-    else:
-        _CACHE_[what]= {'response': func(*args , **kwargs)}
+    # if _CACHE_.get(what) :
+    #     if datetime.now().timestamp() - _CACHE_.get(what).get("_CACHE_TIMEOUT") < _CACHE_TIMEOUT:
+    #         return _CACHE_[what]['response'] 
+    # # _cache[what] = requests.get(url=BINANCE_URL)
+    # else:
+    #     _CACHE_[what]= {'response': func(*args , **kwargs)}
+    _CACHE_[what]= {'response': func(*args , **kwargs)}
     _CACHE_[what]["_CACHE_TIMEOUT"] = datetime.now().timestamp()
     return _CACHE_[what]['response'] 
     
@@ -197,7 +198,7 @@ def update_market_price():
         getMPCoinmarketCap(all_token_objs)
         getMPBinance(all_token_objs)
         getMPAMMDexes(all_token_objs, chain)
-        print(chain.name)
+        logging.info(chain.name," Chain updated!")
 while True:            
     update_market_price()
     time.sleep(UPDATE_INTERVAL)
