@@ -144,7 +144,8 @@ def getMPAMMDexes(tokens,chain):
                         continue
                     if _token in PREFERED_BASES_ADDRESS[tkn.chain.name]:
                         _p = pair.token_price(wrapped)[_token] * (Redis.get_obj(_token , chain.redis_db, is_token=True).average_price)
-                        my_prices.append(_p)
+                        if _p>0:
+                            my_prices.append(_p)
             if my_prices:
                 tkn.value_list["pmmdex"] = float(sum(my_prices) / len(my_prices))
                 tkn.save()
